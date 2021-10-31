@@ -1,0 +1,82 @@
+
+TO DO:
+
+1. config.py 
+    a. add CPT_DIM - this the dimension which we will do the graph attention 
+    b. add CPT_EMB_DIM - this is the dimension which we will use for 1. textual command 2. concept embeddings
+    b. add STEM_PARALLEL_CONCEPT / STEM_SHARED_CONCEPT - this is for parallel concept vocabulary lcgn - used for initializing the layer weights
+    c. add NUM_CONCEPTS - this is the number of concepts
+
+2. lcgn.py
+    a. make sure to get all CPT_DIM - CPT_EMB_DIM - CTX_DIM - CMD_DIM - either as the same size or the dimensions match
+
+
+CONCPET-vocabulary 
+0. ground truth - only using the question encoder mapped to concepts then just using the concept vocabulary (perfect vision) DONE
+1. map and flatten - only thing that needs to be changed is - mapping the concept voabulary tensor to a single vector to projecting them down : then regular LCGN EASY DONE
+    a. implement question encoder 
+        i. EncoderConceptVocabulary
+    b. implement image loader - lcgn.py
+        i. out own LCGNConcat
+            1. loc_ctx_init - implmeent project down to deal with parameter explosion
+            2. build_loc_ctx_init
+
+1. concept vocabulary by enforcing the model to work with this DONE
+    a. implement question encoder - get the embedding matrix that was used here for LCGNConceptVocabulary
+        i. EncoderConceptVocabulary - outputs the embedding matrix 
+    b. implement image loader - lcgn.py
+        i   our own LCGNConceptVocabulary
+            1. loc_ctx_init - implmeent classification into the embeddings
+            2. build_loc_ctx_init    
+    c. change LCGN model.py - LCGNnetConceptVocabulary
+    d. change config.py
+        i. add cfg.CONCEPT_VOCABULARY
+
+--> notes here that maybe we might not be attending to the entire scene - hence this might be causing problem ??
+
+2.concept vocabulary by enforcing the model to only reasoning in concept vocabulary - problem >?
+    one thing could be a problem because the current model the language "adds" information to the contextual vectors - hence this might be interfering with 
+    the mode tryign to make use of the concept vocabulary - hence get rid of memory vectors being affected by the concept vector 
+
+3. concept vocabulary by enforcing the model to only reasoning in concept vocabulary 
+    here what LCGN does is - is creates these contextual vectors from its neighbors : similarily - can we really know what the concept really is without looking at its neighbors?
+    in [1] we converted everything to concepts in the first layer - and used this - but we should be better at deciding which ones are which concepts after we have built these contextual vectors
+
+
+
+3. run LCGN |C| number of times then combine at the end MEDIUM
+    a. how do we make the computation and memory requirement reasonable? - projection down to smaller 
+4. shared LCGN in parallel -  
+    b. which parts should be shared? multi-head attention 
+    c. we want to do attention in each concept space then use the concept attention weights with command to do averagin..?
+5. pseudo-concept - but encoded hidden vectors and the final contextual vectors need to be transportable ! UNICODER-objectxive EASY
+
+Concept space - what does it mean to be in a concept space?
+    1. we reason in terms of these concepts - these are essentially classifications
+
+    the idea of invariant representation is that these representations are mapped tothe same invariant representations for the ones that belong to the same "concept"
+    - meaning they are mapped to the similar regions - and these regions are much more easily separable than others - which is essentially what deep learning is doing 
+
+How do concepts interact with each other - does it interact?
+
+
+Results
+
+1. initial concept vocabulary : 57.7% on validation 
+2. initial concept vocabulary with different non-concept vector for language/vision - without normalization : 56% on validation  
+3. initial concept vocabulary with different non-concept vector for language/vision - with normalization :  56% on validation  
+4. initial concept vocabulary with different non-concept vector for language/vision - with normalization  + longer :  56% on validation  
+5. initial concept vocabulary with different non-concept vector for language/vision - with normalization  + longer + more concepts :  55% on validation 
+5. initial concept vocabulary with interaction through prob distribution: 58.3% on validation with still improving after 35 
+6. concept vocabulary with picking of concept at each iteration 
+
+
+a. nohup python exp_gqa/main.py --cfg exp_gqa/cfgs/lcgn_objects.yaml train True GPUS 2 NUM_CPT 77 CPT_TYPE RCDI MSG_ITER_NUM 4 ENC_TYPE enc-dec SNAPSHOT_FILE './exp_gqa/pytorch_ckpt_8/%s/%04d.ckpt' >> a.out
+    result : 0.6292
+b. nohup python exp_gqa/main.py --cfg exp_gqa/cfgs/lcgn_objects.yaml train True GPUS 2 NUM_CPT 77 CPT_TYPE RC MSG_ITER_NUM 4 ENC_TYPE enc SNAPSHOT_FILE './exp_gqa/pytorch_ckpt_9/%s/%04d.ckpt' >> b.out
+c. nohup python exp_gqa/main.py --cfg exp_gqa/cfgs/lcgn_objects.yaml train True GPUS 3 NUM_CPT 77 CPT_TYPE PD MSG_ITER_NUM 4 ENC_TYPE enc SNAPSHOT_FILE './exp_gqa/pytorch_ckpt_10/%s/%04d.ckpt' >> c.out
+    result : 0.6037
+d. nohup python exp_gqa/main.py --cfg exp_gqa/cfgs/lcgn_objects.yaml train True GPUS 1 NUM_CPT 77 CPT_TYPE RCDI MSG_ITER_NUM 8 ENC_TYPE enc-dec SNAPSHOT_FILE './exp_gqa/pytorch_ckpt_11/%s/%04d.ckpt' >> d.out
+e. nohup python exp_gqa/main.py --cfg exp_gqa/cfgs/lcgn_objects.yaml train True GPUS 1 NUM_CPT 155 CPT_TYPE RCDI MSG_ITER_NUM 4 ENC_TYPE enc-dec SNAPSHOT_FILE './exp_gqa/pytorch_ckpt_12/%s/%04d.ckpt' >> e.out
+f. nohup python exp_gqa/main.py --cfg exp_gqa/cfgs/lcgn_objects.yaml train True GPUS 2 NUM_CPT 155 CPT_TYPE RCDI MSG_ITER_NUM 8 ENC_TYPE enc-dec SNAPSHOT_FILE './exp_gqa/pytorch_ckpt_13/%s/%04d.ckpt' >> f.out
+g. d. nohup python exp_gqa/main.py --cfg exp_gqa/cfgs/lcgn_objects.yaml train True GPUS 2 NUM_CPT 77 CPT_TYPE RCDI MSG_ITER_NUM 4 ENC_TYPE enc-dec SNAPSHOT_FILE './exp_gqa/pytorch_ckpt_14/%s/%04d.ckpt' >> g.out
