@@ -2,7 +2,7 @@
 
 Sungjun Han, Esra Dönmez
 
-Project report: [Here](https://github.com/esradonmez/Structural-priors-in-VQA/main/report.pdf)
+Project report: [Here](https://github.com/esradonmez/Structural-priors-in-VQA/blob/main/report.pdf)
 
 ## Abstract
 
